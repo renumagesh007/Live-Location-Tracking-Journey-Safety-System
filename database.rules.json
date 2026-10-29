@@ -1,0 +1,41 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "contacts": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "journeys": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "active_locations": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('shares_by_user').child($uid).child('active').val() === true)",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['latitude', 'longitude', 'updated_at', 'is_sharing'])"
+      }
+    },
+    "shares": {
+      "$token": {
+        ".read": true,
+        ".write": "auth != null && newData.child('user_id').val() === auth.uid"
+      }
+    },
+    "emergency_alerts": {
+      "$alertId": {
+        ".read": true,
+        ".write": "auth != null && (!data.exists() || data.child('user_id').val() === auth.uid)"
+      }
+    }
+  }
+}

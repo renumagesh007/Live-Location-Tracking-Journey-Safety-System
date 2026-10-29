@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Live Location Tracking & Journey Safety System</title>
+    <!-- Fonts & Leaflet & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dashboard-body">
+
+    <!-- Top Dashboard Navbar -->
+    <header class="dash-navbar">
+        <div class="dash-nav-left">
+            <a href="/" class="dash-brand">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <span class="brand-name">SafeJourney<span class="brand-accent">Live</span></span>
+            </a>
+            <div id="sharingStatusBadge" class="status-badge badge-idle">
+                <span class="pulse-dot"></span> <span id="sharingBadgeText">Tracking Inactive</span>
+            </div>
+        </div>
+
+        <div class="dash-nav-right">
+            <!-- Prominent SOS Button in Header -->
+            <button class="btn btn-sos btn-header-sos" onclick="openSosModal()">
+                <i class="fa-solid fa-triangle-exclamation"></i> SOS EMERGENCY
+            </button>
+            
+            <div class="user-profile-menu">
+                <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="user-meta">
+                    <span class="user-display-name">{{ user.name }}</span>
+                    <span class="user-email-text">{{ user.email }}</span>
+                </div>
+            </div>
+
+            <a href="/api/auth/logout" class="btn btn-logout" title="Log Out">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Notification Permission Alert Banner (if needed) -->
+    <div id="notifBanner" class="system-banner banner-warning hidden">
+        <div class="banner-content">
+            <i class="fa-solid fa-bell"></i>
+            <span>Enable browser notifications to receive geofence arrival alerts and journey delay warnings.</span>
+        </div>
+        <button class="btn btn-sm btn-dark" onclick="requestNotificationAccess()">Enable Notifications</button>
+    </div>
+
+    <!-- Active SOS Alert Warning Bar (Shown when an SOS is in progress) -->
+    <div id="activeSosBanner" class="system-banner banner-danger hidden">
+        <div class="banner-content">
+            <i class="fa-solid fa-bullhorn fa-beat"></i>
+            <div>
+                <strong>EMERGENCY SOS IS CURRENTLY ACTIVE!</strong>
+                <span>Coordinates dispatched to your registered contacts.</span>
+            </div>
+        </div>
+        <button class="btn btn-sm btn-light" onclick="resolveActiveSos()">Mark Safe / Resolve SOS</button>
+    </div>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-layout">
+        
+        <!-- Left: Interactive Map Container -->
+        <section class="map-section">
+            <div class="map-container-wrapper">
+                <div id="map" class="map-leaflet"></div>
+
+                <!-- Floating Map Controls -->
+                <div class="map-floating-controls">
+                    <button class="map-ctrl-btn" onclick="centerOnUserLocation()" title="Recenter to my location">
+                        <i class="fa-solid fa-crosshairs"></i>
+                    </button>
+                    <button class="map-ctrl-btn" onclick="fitRouteBounds()" title="Fit entire journey route">
+                        <i class="fa-solid fa-route"></i>
+                    </button>
+                    <button class="map-ctrl-btn" onclick="toggleMapTileLayer()" title="Toggle Satellite/Street">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </button>
+                </div>
+
+                <!-- Floating Journey Progress Bar (When Journey is Active) -->
+                <div id="floatingJourneyWidget" class="floating-journey-card hidden">
+                    <div class="journey-card-top">
+                        <div class="dest-badge"><i class="fa-solid fa-flag-checkered"></i> Destination</div>
+                        <span id="widgetStatusBadge" class="badge-status status-in-progress">In Progress</span>
+                    </div>
+                    <h4 id="widgetDestName" class="widget-title">Central Campus Library</h4>
+                    <div class="widget-metrics">
+                        <div class="metric">
+                            <span class="label">Distance Remaining</span>
+                            <span id="widgetDistance" class="val">Calculating...</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Expected Arrival</span>
+                            <span id="widgetEta" class="val">--:--</span>
+                        </div>
+                    </div>
+                    <div class="widget-actions">
+                        <button class="btn btn-sm btn-success" onclick="markJourneyCompleted()">
+                            <i class="fa-solid fa-check-circle"></i> Complete
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="cancelCurrentJourney()">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Location Privacy Notice Overlay -->
+                <div class="map-privacy-indicator">
+                    <i class="fa-solid fa-eye-slash"></i> Voluntary GPS Tracking Active Only When Sharing
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Control Deck & Safety Panels -->
+        <aside class="control-deck">
+
+            <!-- Card 1: Live Location Tracking Controls -->
+            <div class="deck-card tracking-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-satellite-dish card-icon"></i>
+                        <span>Live GPS Tracking</span>
+                    </div>
+                    <div id="gpsStatusPill" class="pill pill-offline">GPS Ready</div>
+                </div>
+                <div class="card-body">
+                    <div class="telemetry-grid">
+                        <div class="telemetry-box">
+                            <span class="tele-label">Latitude</span>
+                            <span id="teleLat" class="tele-val">--.------</span>
+                        </div>
+                        <div class="telemetry-box">
+                            <span class="tele-label">Longitude</span>
+                            <span id="teleLng" class="tele-val">--.------</span>
+                        </div>
+                        <div class="telemetry-box">
+                            <span class="tele-label">Accuracy</span>
+                            <span id="teleAcc" class="tele-val">-- m</span>
+                        </div>
+                        <div class="telemetry-box">
+                            <span class="tele-label">Speed</span>
+                            <span id="teleSpeed" class="tele-val">-- km/h</span>
+                        </div>
+                    </div>
+                    
+                    <div class="timestamp-meta">
+                        <i class="fa-regular fa-clock"></i> Last Updated: <span id="teleTimestamp">Never</span>
+                    </div>
+
+                    <div class="tracking-action-bar">
+                        <button id="btnStartTracking" class="btn btn-success btn-lg flex-1" onclick="startTrackingAndSharing()">
+                            <i class="fa-solid fa-play"></i> Start Sharing
+                        </button>
+                        <button id="btnStopTracking" class="btn btn-danger btn-lg flex-1 hidden" onclick="stopTrackingAndSharing()">
+                            <i class="fa-solid fa-stop"></i> Stop Sharing
+                        </button>
+                    </div>
+                    <p class="card-note">
+                        <i class="fa-solid fa-shield"></i> Updates halt immediately when you press Stop Sharing.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Card 2: Destination Journey Planner -->
+            <div class="deck-card journey-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-route card-icon"></i>
+                        <span>Journey to Destination</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="journeyForm" onsubmit="handleStartJourney(event)">
+                        <div class="form-group">
+                            <label for="destSearchInput"><i class="fa-solid fa-map-pin"></i> Destination</label>
+                            <div class="input-with-button">
+                                <input type="text" id="destSearchInput" class="form-input" placeholder="Search address, landmark or college..." required autocomplete="off">
+                                <button type="button" class="btn btn-secondary btn-icon" onclick="triggerGeocodeSearch()" title="Search location">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                            <!-- Autocomplete dropdown suggestions -->
+                            <div id="searchSuggestions" class="search-dropdown hidden"></div>
+                        </div>
+
+                        <!-- Lat/Lng hidden or auto-populated -->
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="geofenceRadius"><i class="fa-solid fa-bullseye"></i> Arrival Radius</label>
+                                <select id="geofenceRadius" class="form-select">
+                                    <option value="50">50 meters</option>
+                                    <option value="100" selected>100 meters (Recommended)</option>
+                                    <option value="200">200 meters</option>
+                                    <option value="500">500 meters</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="expectedArrivalTime"><i class="fa-regular fa-hourglass-half"></i> Expected Arrival</label>
+                                <input type="time" id="expectedArrivalTime" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="routing-preview-box" id="routingPreviewBox">
+                            <div class="route-stat">
+                                <span class="stat-name">Route Distance</span>
+                                <span id="previewDistance" class="stat-value">-- km</span>
+                            </div>
+                            <div class="route-stat">
+                                <span class="stat-name">Approx. Time</span>
+                                <span id="previewDuration" class="stat-value">-- min</span>
+                            </div>
+                        </div>
+                        <p class="disclaimer-text">
+                            *Estimated travel times are approximate and vary based on transit conditions.
+                        </p>
+
+                        <button type="submit" id="btnStartJourney" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-car-side"></i> Start Monitored Journey
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Card 3: Secure Location Sharing Links -->
+            <div class="deck-card sharing-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-share-nodes card-icon"></i>
+                        <span>Live Sharing Session</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="sharingInactiveState">
+                        <p class="muted-text">Generate a private, temporary tracking link to share with trusted friends or family members.</p>
+                        <button class="btn btn-outline btn-block" onclick="generateShareSession()">
+                            <i class="fa-solid fa-link"></i> Generate Sharing Link (4 Hours)
+                        </button>
+                    </div>
+
+                    <div id="sharingActiveState" class="hidden">
+                        <div class="share-link-box">
+                            <input type="text" id="shareUrlInput" class="form-input share-input" readonly>
+                            <button class="btn btn-primary btn-copy" onclick="copyShareLink()">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="share-meta-row">
+                            <span class="share-expires"><i class="fa-solid fa-hourglass-end"></i> Expires: <span id="shareExpiresVal">--</span></span>
+                            <button class="btn btn-sm btn-outline-danger" onclick="revokeShareSession()">
+                                <i class="fa-solid fa-ban"></i> Revoke Access
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Trusted Emergency Contacts -->
+            <div class="deck-card contacts-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-address-book card-icon"></i>
+                        <span>Trusted Contacts</span>
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="openAddContactModal()">
+                        <i class="fa-solid fa-plus"></i> Add Contact
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="contactsList" class="contacts-list">
+                        <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading contacts...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Emergency SOS Control Center -->
+            <div class="deck-card sos-deck-card">
+                <div class="card-header">
+                    <div class="card-title text-danger">
+                        <i class="fa-solid fa-triangle-exclamation card-icon"></i>
+                        <span>Emergency Assistance</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="sos-desc">
+                        Pressing SOS broadcasts your immediate GPS coordinates and journey details to all registered trusted contacts.
+                    </p>
+                    <button class="btn btn-sos btn-block btn-lg" onclick="openSosModal()">
+                        <i class="fa-solid fa-tower-broadcast"></i> TRIGGER SOS NOW
+                    </button>
+                    <p class="legal-disclaimer">
+                        <strong>Disclaimer:</strong> This alerts your personal emergency contacts. It does not contact 911 or police emergency dispatch.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Card 6: College Lab Simulation / Demo Utility -->
+            <div class="deck-card demo-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-flask card-icon"></i>
+                        <span>Lab Demo & Testing Utility</span>
+                    </div>
+                    <span class="pill pill-demo">College Lab Tool</span>
+                </div>
+                <div class="card-body">
+                    <p class="muted-text">
+                        Demonstrate live geofencing arrival and delay detection indoors without changing physical GPS coordinates:
+                    </p>
+                    <div class="demo-actions">
+                        <button id="btnSimulateMovement" class="btn btn-secondary btn-sm" onclick="toggleRouteSimulation()">
+                            <i class="fa-solid fa-person-walking"></i> Simulate Movement Along Route
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="simulateArrivalDirectly()">
+                            <i class="fa-solid fa-location-crosshairs"></i> Simulate Geofence Arrival
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 7: Journey History -->
+            <div class="deck-card history-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-clock-rotate-left card-icon"></i>
+                        <span>Recent Journey History</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="journeyHistoryList" class="history-list">
+                        <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading history...</div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- Modal: Add Trusted Contact -->
+    <div id="contactModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <button class="modal-close-btn" onclick="closeContactModal()">&times;</button>
+            <h3 class="modal-title"><i class="fa-solid fa-user-shield"></i> Add Trusted Contact</h3>
+            <form id="addContactForm" onsubmit="handleAddContact(event)">
+                <div class="form-group">
+                    <label for="contactName"><i class="fa-solid fa-user"></i> Full Name</label>
+                    <input type="text" id="contactName" class="form-input" placeholder="e.g. Sarah Smith" required>
+                </div>
+                <div class="form-group">
+                    <label for="contactPhone"><i class="fa-solid fa-phone"></i> Mobile Phone</label>
+                    <input type="tel" id="contactPhone" class="form-input" placeholder="+1 555-0182" required>
+                </div>
+                <div class="form-group">
+                    <label for="contactEmail"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="contactEmail" class="form-input" placeholder="sarah@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="contactRelation"><i class="fa-solid fa-people-arrows"></i> Relationship</label>
+                    <select id="contactRelation" class="form-select">
+                        <option value="Family">Family / Parent</option>
+                        <option value="Friend">Friend / Roommate</option>
+                        <option value="Guardian">Guardian</option>
+                        <option value="Colleague">Colleague / Peer</option>
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label><input type="checkbox" id="contactNotifySos" checked> Receive SOS Emergency Alerts</label>
+                    <label><input type="checkbox" id="contactNotifyDelay" checked> Receive Journey Delay Alerts</label>
+                </div>
+                <div id="contactFormError" class="alert-box alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block">Save Contact</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Deliberate SOS Confirmation -->
+    <div id="sosModal" class="modal-backdrop hidden">
+        <div class="modal-card sos-modal-card">
+            <button class="modal-close-btn" onclick="closeSosModal()">&times;</button>
+            <div class="sos-modal-header">
+                <i class="fa-solid fa-triangle-exclamation sos-big-icon"></i>
+                <h3>Confirm Emergency SOS Broadcast</h3>
+            </div>
+            <p class="sos-modal-text">
+                This will immediately broadcast your <strong>exact current GPS location</strong>, timestamp, and a direct map link to all configured trusted contacts.
+            </p>
+            <div class="form-group">
+                <label for="sosCustomMessage"><i class="fa-solid fa-comment-dots"></i> Emergency Note (Optional):</label>
+                <input type="text" id="sosCustomMessage" class="form-input" value="EMERGENCY! I feel unsafe or need immediate assistance. Please check my live location.">
+            </div>
+            <div class="sos-modal-actions">
+                <button class="btn btn-secondary" onclick="closeSosModal()">Cancel</button>
+                <button class="btn btn-sos btn-lg" onclick="executeSosTrigger()">
+                    <i class="fa-solid fa-check"></i> Yes, Dispatch SOS
+                </button>
+            </div>
+            <div class="sos-legal-note">
+                Notice: Dispatches notifications to your trusted contacts. Does not place a call to government emergency services.
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Application Scripts -->
+    <script src="{{ url_for('static', filename='js/firebase_config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tracking.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

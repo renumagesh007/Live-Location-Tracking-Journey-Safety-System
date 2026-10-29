@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Location Tracking & Journey Safety System</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="landing-body">
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <span class="brand-name">SafeJourney<span class="brand-accent">Live</span></span>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-outline" onclick="openAuthModal('login')">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+                </button>
+                <button class="btn btn-primary" onclick="openAuthModal('register')">
+                    <i class="fa-solid fa-user-plus"></i> Get Started
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="badge-pill">
+                <i class="fa-solid fa-satellite-dish pulse-icon"></i> College Final Year Project &bull; Real-Time Safety
+            </div>
+            <h1 class="hero-title">Live Location Tracking & Journey Safety System</h1>
+            <p class="hero-subtitle">
+                Voluntarily share your live GPS location with trusted contacts, monitor routes with smart geofencing arrival alerts, and dispatch emergency SOS signals instantly.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary btn-lg" onclick="openAuthModal('register')">
+                    <i class="fa-solid fa-location-arrow"></i> Start Journey Safely
+                </button>
+                <button class="btn btn-secondary btn-lg" onclick="openAuthModal('login')">
+                    <i class="fa-solid fa-desktop"></i> Open Dashboard
+                </button>
+            </div>
+
+            <!-- Key Highlights Pill Bar -->
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Private & Voluntary</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fa-solid fa-route"></i>
+                    <span>Geofence Arrival Detection</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Deliberate SOS Alerting</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Revocable Sharing Links</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Grid -->
+    <section class="features-section">
+        <div class="section-container">
+            <h2 class="section-title">Core Safety Modules</h2>
+            <p class="section-subtitle">Designed for student commuters, solo travelers, and everyday peace of mind.</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon icon-blue">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </div>
+                    <h3>Live Real-Time GPS</h3>
+                    <p>Continuous GPS location streaming via browser Geolocation API with accuracy circles, speed, heading, and breadcrumb trails.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon icon-purple">
+                        <i class="fa-solid fa-shield-cat"></i>
+                    </div>
+                    <h3>Revocable Shared Links</h3>
+                    <p>Generate secure, time-expiring temporary links for trusted contacts. Revoke access instantly whenever you choose.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon icon-green">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <h3>Smart Destination Geofencing</h3>
+                    <p>Enter any destination, compute optimal routes via OSRM, and receive automatic arrival notifications upon entering your destination zone.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon icon-red">
+                        <i class="fa-solid fa-bell-slash"></i>
+                    </div>
+                    <h3>Delay & Overdue Detection</h3>
+                    <p>Set an expected arrival time. If travel is delayed beyond your estimated window, safety notifications trigger for your circle.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon icon-emergency">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h3>Emergency SOS Dispatch</h3>
+                    <p>Deliberate 2-step confirmed SOS broadcast transmitting exact coordinates, timestamp, and map links directly to your emergency contacts.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon icon-amber">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <h3>Firebase Realtime Sync</h3>
+                    <p>Integrated with Firebase Realtime Database for instantaneous coordinate synchronization and Firebase Authentication.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy & Ethics Commitment -->
+    <section class="privacy-section">
+        <div class="section-container">
+            <div class="privacy-box">
+                <i class="fa-solid fa-user-shield privacy-big-icon"></i>
+                <div>
+                    <h3>User Privacy & Voluntary Tracking Guarantee</h3>
+                    <p>
+                        This system operates strictly with your explicit consent. Your location is <strong>never tracked in the background without permission</strong>. You can pause or stop location sharing at any time with a single tap. Location viewing links are private and can be revoked on demand.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Live Location Tracking and Journey Safety System &bull; College Engineering Final Project</p>
+            <p class="tech-stack-tags">Built with Python Flask &bull; Firebase &bull; Leaflet.js &bull; OpenStreetMap &bull; Geolocation API</p>
+        </div>
+    </footer>
+
+    <!-- Auth Modal (Login / Register) -->
+    <div id="authModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <button class="modal-close-btn" onclick="closeAuthModal()">&times;</button>
+            <div class="modal-tabs">
+                <button id="tabLogin" class="modal-tab active" onclick="switchAuthTab('login')">Log In</button>
+                <button id="tabRegister" class="modal-tab" onclick="switchAuthTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="student@college.edu" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword"><i class="fa-solid fa-key"></i> Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+                <div id="loginError" class="alert-box alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="regName"><i class="fa-solid fa-user"></i> Full Name</label>
+                    <input type="text" id="regName" class="form-input" placeholder="Jane Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="regEmail" class="form-input" placeholder="jane@college.edu" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPhone"><i class="fa-solid fa-phone"></i> Mobile Phone (for emergency SMS demo)</label>
+                    <input type="tel" id="regPhone" class="form-input" placeholder="+1 555-0199" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword"><i class="fa-solid fa-key"></i> Password (min. 6 chars)</label>
+                    <input type="password" id="regPassword" class="form-input" placeholder="••••••••" minlength="6" required>
+                </div>
+                <div id="registerError" class="alert-box alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fa-solid fa-user-plus"></i> Create Account
+                </button>
+            </form>
+
+            <div class="modal-footer-note">
+                <i class="fa-solid fa-shield-heart"></i> Passwords are salted and hashed securely using bcrypt/Werkzeug.
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/firebase_config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script>
+        // Check URL parameter to auto-open login if redirected
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('login')) {
+            openAuthModal('login');
+        }
+    </script>
+</body>
+</html>

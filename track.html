@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Journey Tracking - SafeJourney Live</title>
+    <!-- Fonts & Leaflet & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="viewer-body">
+
+    <!-- Top Viewer Navbar -->
+    <header class="viewer-navbar">
+        <div class="viewer-brand">
+            <i class="fa-solid fa-shield-halved brand-icon"></i>
+            <span class="brand-name">SafeJourney<span class="brand-accent">Live</span></span>
+        </div>
+
+        <div class="viewer-meta-header">
+            <div class="viewer-subject">
+                <span class="subject-label">Monitoring:</span>
+                <span id="subjectName" class="subject-name">{{ shared_user.name }}</span>
+            </div>
+            <div id="viewerSharingBadge" class="status-badge badge-active">
+                <span class="pulse-dot"></span> <span id="viewerBadgeText">Live Tracking Active</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Emergency SOS Alert Banner (Shown in real-time if SOS is active) -->
+    <div id="viewerSosAlert" class="viewer-sos-banner hidden">
+        <div class="viewer-sos-content">
+            <i class="fa-solid fa-triangle-exclamation fa-beat-fade sos-alert-icon"></i>
+            <div>
+                <h3>EMERGENCY ALERT BROADCAST</h3>
+                <p id="sosAlertMessage">User has triggered an emergency SOS signal at their current coordinates.</p>
+                <div class="sos-alert-time" id="sosAlertTime">Time: --</div>
+            </div>
+        </div>
+        <a id="sosGoogleMapsLink" href="#" target="_blank" class="btn btn-light btn-sm">
+            <i class="fa-solid fa-location-arrow"></i> Open in Google Maps
+        </a>
+    </div>
+
+    <!-- Viewer Map Section -->
+    <div class="viewer-map-wrapper">
+        <div id="viewerMap" class="viewer-map"></div>
+
+        <!-- Floating Viewer Status Card -->
+        <div class="viewer-card">
+            <div class="viewer-card-header">
+                <div class="dest-info">
+                    <span class="dest-subtitle"><i class="fa-solid fa-flag-checkered"></i> Destination</span>
+                    <h3 id="viewerDestName" class="dest-title">Traveling to destination</h3>
+                </div>
+                <span id="viewerJourneyBadge" class="badge-status status-in-progress">In Progress</span>
+            </div>
+
+            <div class="viewer-metrics-grid">
+                <div class="viewer-metric-item">
+                    <span class="v-label">Remaining Distance</span>
+                    <span id="viewerDistanceRemaining" class="v-value">-- km</span>
+                </div>
+                <div class="viewer-metric-item">
+                    <span class="v-label">Expected Arrival</span>
+                    <span id="viewerEta" class="v-value">--:--</span>
+                </div>
+                <div class="viewer-metric-item">
+                    <span class="v-label">Speed</span>
+                    <span id="viewerSpeed" class="v-value">-- km/h</span>
+                </div>
+                <div class="viewer-metric-item">
+                    <span class="v-label">Last Ping</span>
+                    <span id="viewerLastPing" class="v-value">Connecting...</span>
+                </div>
+            </div>
+
+            <div class="viewer-footer-meta">
+                <span><i class="fa-solid fa-clock"></i> Link expires: <strong id="viewerExpiryText">--</strong></span>
+                <span class="live-indicator"><i class="fa-solid fa-circle text-success pulse-dot"></i> Live Syncing</span>
+            </div>
+        </div>
+
+        <!-- Floating Controls -->
+        <div class="viewer-floating-controls">
+            <button class="map-ctrl-btn" onclick="recenterViewerMap()" title="Center traveler">
+                <i class="fa-solid fa-crosshairs"></i>
+            </button>
+            <button class="map-ctrl-btn" onclick="fitViewerRoute()" title="View full route">
+                <i class="fa-solid fa-route"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden token holder -->
+    <input type="hidden" id="shareToken" value="{{ token }}">
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="{{ url_for('static', filename='js/firebase_config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+</body>
+</html>
